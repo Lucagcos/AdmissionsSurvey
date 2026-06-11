@@ -4,58 +4,50 @@ const skipBtn = document.getElementById('skip');
 const quitBtn = document.getElementById('quit');
 const status = document.getElementById('status');
 
-let current = null; // {a, b}
+let current = null; // {a, b, aLabel, bLabel}
 let pendingVotes = []; // queued as "winner loser"
 let items = [];
-let allPairs = []; // array of [i, j] where i < j
-let pairIndex = 0;
+let pairCount = 0; // number of pairs shown so far
+let maxPairsPerUser = 15; // will be set by server
 
 async function fetchPair() {
-  if (pairIndex >= allPairs.length) {
+  if (pairCount >= maxPairsPerUser) {
     current = null;
     leftBtn.disabled = true;
     rightBtn.disabled = true;
     skipBtn.disabled = true;
     leftBtn.textContent = 'Done';
     rightBtn.textContent = 'Done';
-    updateQueuedStatus(`All pairs shown (${allPairs.length}/${allPairs.length})`);
+    updateQueuedStatus(`Survey complete (${pairCount}/${maxPairsPerUser})`);
     return;
   }
 
-  const pair = allPairs[pairIndex++];
-  let a = pair[0];
-  let b = pair[1];
-  // Randomize on-screen left/right order while keeping pair uniqueness.
-  if (Math.random() < 0.5) {
-    const t = a; a = b; b = t;
+  try {
+    const res = await fetch('/pair');
+    if (!res.ok) throw new Error('Failed to fetch pair');
+    const data = await res.json();
+    if (data.maxPairsPerUser !== undefined) {
+      maxPairsPerUser = data.maxPairsPerUser;
+    }
+    current = {
+      a: data.a,
+      b: data.b,
+      aLabel: data.aLabel,
+      bLabel: data.bLabel
+    };
+    leftBtn.textContent = current.aLabel;
+    rightBtn.textContent = current.bLabel;
+    updateQueuedStatus(`Pair ${pairCount + 1}/${maxPairsPerUser}`);
+  } catch (e) {
+    setStatus('Error loading pair');
+    console.error(e);
   }
-  current = { a, b };
-  leftBtn.textContent = items[a];
-  rightBtn.textContent = items[b];
-  updateQueuedStatus(`Pair ${pairIndex}/${allPairs.length}`);
 }
 
 function setStatus(s) { status.textContent = s; }
 function updateQueuedStatus(prefix) {
   const base = `${pendingVotes.length} queued`;
   setStatus(prefix ? `${prefix} (${base})` : base);
-}
-
-function buildAllPairs(count) {
-  const pairs = [];
-  for (let i = 0; i < count; i++) {
-    for (let j = i + 1; j < count; j++) {
-      pairs.push([i, j]);
-    }
-  }
-  // Fisher-Yates shuffle for unbiased random ordering
-  for (let i = pairs.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    const t = pairs[i];
-    pairs[i] = pairs[j];
-    pairs[j] = t;
-  }
-  return pairs;
 }
 
 async function initPairs() {
@@ -65,8 +57,6 @@ async function initPairs() {
     if (!res.ok) throw new Error('Failed to fetch items');
     items = await res.json();
     if (!Array.isArray(items)) throw new Error('Invalid items response');
-    allPairs = buildAllPairs(items.length);
-    pairIndex = 0;
     await fetchPair();
   } catch (e) {
     setStatus('Error loading items');
@@ -108,6 +98,7 @@ async function flushVotes() {
 
 async function voteAndNext(winner, loser) {
   queueVote(winner, loser);
+  pairCount++;
   await fetchPair();
 }
 
@@ -120,6 +111,7 @@ rightBtn.addEventListener('click', () => {
   voteAndNext(current.b, current.a);
 });
 skipBtn.addEventListener('click', () => {
+  pairCount++;
   fetchPair();
 });
 

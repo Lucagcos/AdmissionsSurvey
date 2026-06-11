@@ -29,6 +29,8 @@ public class Main {
     );
 
     private static final Path VOTES_FILE = Paths.get("votes.txt");
+    // Configurable: maximum number of pairs each user session should answer
+    private static final int MAX_PAIRS_PER_USER = 15;
 
     public static void main(String[] args) throws Exception {
         int port = 8000;
@@ -136,8 +138,8 @@ public class Main {
         }
 
         String json = String.format(Locale.ROOT,
-                "{\"a\":%d,\"b\":%d,\"aLabel\":\"%s\",\"bLabel\":\"%s\"}",
-                a, b, escapeJson(ITEMS.get(a)), escapeJson(ITEMS.get(b))
+                "{\"a\":%d,\"b\":%d,\"aLabel\":\"%s\",\"bLabel\":\"%s\",\"maxPairsPerUser\":%d}",
+                a, b, escapeJson(ITEMS.get(a)), escapeJson(ITEMS.get(b)), MAX_PAIRS_PER_USER
         );
         sendResponse(exchange, json, "application/json");
     }
