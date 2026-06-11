@@ -1,0 +1,10 @@
+body { font-family: Arial, Helvetica, sans-serif; background:#f7f7f8; color:#111; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+main { background:white; padding:24px; border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,0.08); width:420px; text-align:center; }
+.pair { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:20px 0; }
+.choice { flex:1; padding:18px; font-size:16px; border-radius:6px; border:1px solid #ddd; background:#fff; cursor:pointer; }
+.choice:hover { box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.vs { padding:0 8px; color:#666; }
+.controls { display:flex; align-items:center; justify-content:space-between; }
+#skip { padding:8px 12px; }
+#status { font-size:13px; color:#666; }
+
