@@ -102,7 +102,13 @@ public class Main {
                     try {
                         int x = Integer.parseInt(parts[0]);
                         int y = Integer.parseInt(parts[1]);
-                        if (x < 0 || y < 0 || x >= n || y >= n) continue;
+                        // Support both legacy 0-based rows and new 1-based rows.
+                        if (x >= 1 && y >= 1 && x <= n && y <= n) {
+                            x--;
+                            y--;
+                        } else if (x < 0 || y < 0 || x >= n || y >= n) {
+                            continue;
+                        }
                         int a = Math.min(x, y);
                         int b = Math.max(x, y);
                         counts[a][b]++;
@@ -173,7 +179,7 @@ public class Main {
             return;
         }
 
-        String line = winner + " " + loser + System.lineSeparator();
+        String line = (winner + 1) + " " + (loser + 1) + System.lineSeparator();
         synchronized (Main.class) {
             Files.write(VOTES_FILE, line.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
         }
@@ -204,7 +210,7 @@ public class Main {
                 int winner = Integer.parseInt(parts[0]);
                 int loser = Integer.parseInt(parts[1]);
                 if (!isValidIndex(winner) || !isValidIndex(loser)) continue;
-                out.append(winner).append(' ').append(loser).append(System.lineSeparator());
+                out.append(winner + 1).append(' ').append(loser + 1).append(System.lineSeparator());
                 written++;
             } catch (NumberFormatException ignored) {
             }
